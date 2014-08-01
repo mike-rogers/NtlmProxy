@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
@@ -11,19 +9,19 @@ namespace MikeRogers.NtlmProxy
     /// <summary>
     /// Class NtlmProxy.
     /// </summary>
-    public class NtlmProxy : IDisposable
+    public sealed class NtlmProxy : IDisposable
     {
         #region Fields
-
-        /// <summary>
-        /// The <see cref="HttpListener"/> instance for creating a small proxy server
-        /// </summary>
-        private readonly HttpListener listener;
 
         /// <summary>
         /// The hostname to which incoming requests will be proxied
         /// </summary>
         private readonly Uri hostname;
+
+        /// <summary>
+        /// The simple HTTP server that accepts proxied requests
+        /// </summary>
+        private readonly SimpleHttpServer server;
 
         #endregion
 
@@ -31,12 +29,14 @@ namespace MikeRogers.NtlmProxy
         #region Properties
 
         /// <summary>
-        /// Gets or sets the port.
+        /// Gets the proxy server port.
         /// </summary>
-        /// <value>The port.</value>
-        public int Port { get; set; }
+        public int Port
+        {
+            get { return server.Port; }
+        }
 
-        #endregion Properties
+        #endregion
 
 
         #region Constructors
@@ -48,13 +48,8 @@ namespace MikeRogers.NtlmProxy
         /// <param name="port">The port. If 0, a port is randomly chosen and assigned.</param>
         public NtlmProxy(Uri proxiedHostname, int port = 0)
         {
-            Port = port == 0 ? GetEmptyPort() : port;
+            server = new SimpleHttpServer(ProcessRequest, port);
             hostname = proxiedHostname;
-            listener = new HttpListener();
-
-            listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
-            listener.Start();
-            StartListenLoop();
         }
 
         #endregion
@@ -67,46 +62,13 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public void Dispose()
         {
-            listener.Stop();
+            server.Dispose();
         }
 
         #endregion
 
 
         #region Private Methods
-
-        /// <summary>
-        /// Gets the empty port.
-        /// </summary>
-        /// <returns>An unused port number</returns>
-        private static int GetEmptyPort()
-        {
-            // from http://stackoverflow.com/a/3978040/996184
-            var listener = new TcpListener(IPAddress.Any, 0);
-            listener.Start();
-            var port = ((IPEndPoint) listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
-        }
-
-        /// <summary>
-        /// Starts the listen loop.
-        /// </summary>
-        private async void StartListenLoop()
-        {
-            while (true)
-            {
-                var context = await listener.GetContextAsync();
-                var response = await ProcessRequest(context);
-
-                using (var stream = context.Response.OutputStream)
-                {
-                    var bytes = await response.Content.ReadAsByteArrayAsync();
-                    stream.Write(bytes, 0, bytes.Count());
-                    stream.Close();
-                }
-            }
-        }
 
         /// <summary>
         /// Processes the request.
@@ -129,9 +91,18 @@ namespace MikeRogers.NtlmProxy
 
             using (var client = new HttpClient(handler))
             {
+                var httpMethod = new HttpMethod(context.Request.HttpMethod);
                 var target = new Uri(hostname, context.Request.Url.PathAndQuery);
-                var responseMessage = await client.GetAsync(target);
-                return responseMessage;
+                var content = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
+
+                // New implementation suggested by https://github.com/blabla4
+                var request = new HttpRequestMessage(httpMethod, target);
+                if (content != String.Empty)
+                {
+                    request.Content = new StringContent(content, context.Request.ContentEncoding, context.Request.ContentType);
+                }
+
+                return await client.SendAsync(request);
             }
         }
 

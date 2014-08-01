@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NtlmProxy", "NtlmProxy\NtlmProxy.csproj", "{79DF1E9F-06F9-4392-AB0D-3CAC3191EB5F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NtlmProxy.Tests", "NtlmProxy.Tests\NtlmProxy.Tests.csproj", "{8D8540E1-C7B6-437A-AB55-95211669A2CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,10 @@ Global
 		{79DF1E9F-06F9-4392-AB0D-3CAC3191EB5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79DF1E9F-06F9-4392-AB0D-3CAC3191EB5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79DF1E9F-06F9-4392-AB0D-3CAC3191EB5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D8540E1-C7B6-437A-AB55-95211669A2CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D8540E1-C7B6-437A-AB55-95211669A2CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D8540E1-C7B6-437A-AB55-95211669A2CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D8540E1-C7B6-437A-AB55-95211669A2CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
