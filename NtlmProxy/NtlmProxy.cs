@@ -2,6 +2,8 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
@@ -99,8 +101,14 @@ namespace MikeRogers.NtlmProxy
                 var request = new HttpRequestMessage(httpMethod, target);
                 if (content != String.Empty)
                 {
-                    request.Content = new StringContent(content, context.Request.ContentEncoding, context.Request.ContentType);
+                    // weird issue where angular post is doing ContentType=application/json;charset=utf/8 and this throws an exception
+                    var contentType = Regex.Replace(context.Request.ContentType, ";charset=(.)*", string.Empty);
+
+                    request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);
                 }
+
+                // add accept types
+                request.Headers.Add("Accept", context.Request.AcceptTypes);
 
                 return await client.SendAsync(request);
             }

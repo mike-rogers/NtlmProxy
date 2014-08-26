@@ -112,6 +112,10 @@ namespace MikeRogers.NtlmProxy
                 using (var stream = context.Response.OutputStream)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
+                    // set content type and content length
+                    context.Response.ContentLength64 = bytes.Length;
+                    context.Response.ContentType = response.Content.Headers.ContentType.ToString();
+
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();
                 }
