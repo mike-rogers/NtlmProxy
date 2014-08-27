@@ -115,6 +115,8 @@ namespace MikeRogers.NtlmProxy
                     // set content type and content length
                     context.Response.ContentLength64 = bytes.Length;
                     context.Response.ContentType = response.Content.Headers.ContentType.ToString();
+                    context.Response.StatusCode = (int)response.StatusCode;
+                    context.Response.StatusDescription = response.StatusCode.ToString();
 
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();
