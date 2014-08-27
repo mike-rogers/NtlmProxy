@@ -12,7 +12,7 @@ namespace MikeRogers.NtlmProxy
     /// A simple HTTP server that can be set to a random unused port
     /// and expect a given type of authentication.
     /// </summary>
-    public sealed class SimpleHttpServer :IDisposable
+    public sealed class SimpleHttpServer : IDisposable
     {
         #region Fields
 
@@ -46,18 +46,24 @@ namespace MikeRogers.NtlmProxy
         /// Initializes a new instance of the <see cref="SimpleHttpServer"/> class.
         /// </summary>
         /// <param name="handler">The function that handles incoming proxied requests.</param>
-        /// <param name="port">The port. If 0, a port is randomly chosen and assigned.</param>
-        /// <param name="authScheme">A customizable authentication scheme for the server.</param>
+        /// <param name="options">Configuration options for the server.</param>
         public SimpleHttpServer(
             Func<HttpListenerContext, Task<HttpResponseMessage>> handler,
-            int port = 0,
-            AuthenticationSchemes authScheme = AuthenticationSchemes.Anonymous)
+            SimpleHttpServerOptions options = null)
         {
-            Port = port == 0 ? GetEmptyPort() : port;
+            options = options ?? SimpleHttpServerOptions.DefaultOptions;
+
+            if (options.RequestHeaders == null)
+            {
+                throw new ArgumentNullException("options");
+            }
+
+            Port = options.Port == 0 ? GetEmptyPort() : options.Port;
             requestHandler = handler;
+
             listener = new HttpListener
             {
-                AuthenticationSchemes = authScheme,
+                AuthenticationSchemes = options.AuthenticationScheme,
                 IgnoreWriteExceptions = true
             };
 
@@ -112,11 +118,15 @@ namespace MikeRogers.NtlmProxy
                 using (var stream = context.Response.OutputStream)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
-                    // set content type and content length
+
+                    // Copy response attributes back to the proxy
                     context.Response.ContentLength64 = bytes.Length;
-                    context.Response.ContentType = response.Content.Headers.ContentType.ToString();
                     context.Response.StatusCode = (int)response.StatusCode;
                     context.Response.StatusDescription = response.StatusCode.ToString();
+                    if (response.Content.Headers.ContentType != null)
+                    {
+                        context.Response.ContentType = response.Content.Headers.ContentType.ToString();
+                    }
 
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();
@@ -125,6 +135,6 @@ namespace MikeRogers.NtlmProxy
         }
 
         #endregion
- 
+
     }
 }

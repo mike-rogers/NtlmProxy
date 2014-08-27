@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -8,9 +9,6 @@ using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
 {
-    /// <summary>
-    /// Class NtlmProxy.
-    /// </summary>
     public sealed class NtlmProxy : IDisposable
     {
         #region Fields
@@ -24,6 +22,11 @@ namespace MikeRogers.NtlmProxy
         /// The simple HTTP server that accepts proxied requests
         /// </summary>
         private readonly SimpleHttpServer server;
+
+        /// <summary>
+        /// The options for the server
+        /// </summary>
+        private readonly SimpleHttpServerOptions options;
 
         #endregion
 
@@ -47,10 +50,11 @@ namespace MikeRogers.NtlmProxy
         /// Initializes a new instance of the <see cref="NtlmProxy"/> class.
         /// </summary>
         /// <param name="proxiedHostname">The proxied hostname.</param>
-        /// <param name="port">The port. If 0, a port is randomly chosen and assigned.</param>
-        public NtlmProxy(Uri proxiedHostname, int port = 0)
+        /// <param name="serverOptions">Configuration options for the server.</param>
+        public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
         {
-            server = new SimpleHttpServer(ProcessRequest, port);
+            options = serverOptions ?? SimpleHttpServerOptions.DefaultOptions;
+            server = new SimpleHttpServer(ProcessRequest, serverOptions);
             hostname = proxiedHostname;
         }
 
@@ -101,14 +105,30 @@ namespace MikeRogers.NtlmProxy
                 var request = new HttpRequestMessage(httpMethod, target);
                 if (content != String.Empty)
                 {
-                    // weird issue where angular post is doing ContentType=application/json;charset=utf/8 and this throws an exception
-                    var contentType = Regex.Replace(context.Request.ContentType, ";charset=(.)*", string.Empty);
+                    var contentType = context.Request.ContentType;
+
+                    if (options.AngularContentType && contentType != null)
+                    {
+                        // Thank you to https://github.com/svantreeck
+                        contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
+                    }
 
                     request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);
                 }
 
-                // add accept types
-                request.Headers.Add("Accept", context.Request.AcceptTypes);
+                // Add headers ('thank you' to https://github.com/svantreeck)
+                options.RequestHeaders.ToList().ForEach(x => request.Headers.Add(x.Key, x.Value));
+
+                if (options.DuplicateRequestHeaders)
+                {
+                    foreach (var key in context.Request.Headers.AllKeys)
+                    {
+                        if (!options.ForbiddenHeaders.Contains(key))
+                        {
+                            request.Headers.Add(key, context.Request.Headers[key]);
+                        }
+                    }
+                }
 
                 return await client.SendAsync(request);
             }
