@@ -140,7 +140,8 @@ namespace MikeRogers.NtlmProxy.Tests
         }
 
         /// <summary>
-        /// Should be able to duplicate individual request headers into proxied requests.
+        /// The responses from the server should be added to the response object
+        /// passed back to the executing context.
         /// </summary>
         [Test]
         public void ShouldDuplicateHeadersInProxiedRequest()
@@ -211,9 +212,9 @@ namespace MikeRogers.NtlmProxy.Tests
             Action<NtlmProxy> clientAssertion)
         {
             // Unfortunately I'm not familiar enough with await/async to correct the following:
-#pragma warning disable 1998
+            #pragma warning disable 1998
             using (var server = new SimpleHttpServer(async context =>
-#pragma warning restore 1998
+            #pragma warning restore 1998
             {
                 var response = new HttpResponseMessage
                 {
