@@ -125,7 +125,7 @@ namespace MikeRogers.NtlmProxy
                     {
                         if (!options.ForbiddenHeaders.Contains(key))
                         {
-                            request.Headers.Add(key, context.Request.Headers[key]);
+                            request.Headers.TryAddWithoutValidation(key, context.Request.Headers[key]);
                         }
                     }
                 }
