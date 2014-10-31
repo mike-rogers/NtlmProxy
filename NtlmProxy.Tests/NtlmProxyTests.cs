@@ -84,7 +84,7 @@ namespace MikeRogers.NtlmProxy.Tests
         public void ShouldRemoveCharsetForAngularOption()
         {
             var options = SimpleHttpServerOptions.DefaultOptions;
-            options.AngularContentType = true;
+            options.HasAngularContentType = true;
 
             var serverAssertion = new Action<HttpListenerContext>(context =>
             {

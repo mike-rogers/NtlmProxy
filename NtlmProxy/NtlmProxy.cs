@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
 {
+    /// <summary>
+    /// Class NtlmProxy. This class cannot be inherited.
+    /// </summary>
     public sealed class NtlmProxy : IDisposable
     {
         #region Fields
@@ -106,7 +109,7 @@ namespace MikeRogers.NtlmProxy
                 {
                     var contentType = context.Request.ContentType;
 
-                    if (_options.AngularContentType && contentType != null)
+                    if (_options.HasAngularContentType && contentType != null)
                     {
                         // Thank you to https://github.com/svantreeck
                         contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
