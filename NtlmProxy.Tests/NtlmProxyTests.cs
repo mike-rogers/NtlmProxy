@@ -146,7 +146,7 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test]
         public void ShouldDuplicateHeadersInProxiedRequest()
         {
-            var options = new SimpleHttpServerOptions { DuplicateRequestHeaders = true };
+            var options = new SimpleHttpServerOptions { AreHeadersDuplicated = true };
 
             var serverAssertion = new Action<HttpListenerContext>(context =>
             {
@@ -206,7 +206,7 @@ namespace MikeRogers.NtlmProxy.Tests
         /// <param name="serverOptions">The options for the running HTTP server.</param>
         /// <param name="serverAssertion">The configuration/assertion code to run in the context of the server.</param>
         /// <param name="clientAssertion">The configuration/assertion code to run in the context of the client.</param>
-        private void ExecuteTestInContext(
+        private static void ExecuteTestInContext(
             SimpleHttpServerOptions serverOptions,
             Action<HttpListenerContext> serverAssertion,
             Action<NtlmProxy> clientAssertion)

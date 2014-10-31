@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -16,17 +15,17 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// The hostname to which incoming requests will be proxied
         /// </summary>
-        private readonly Uri hostname;
+        private readonly Uri _hostname;
 
         /// <summary>
         /// The simple HTTP server that accepts proxied requests
         /// </summary>
-        private readonly SimpleHttpServer server;
+        private readonly SimpleHttpServer _server;
 
         /// <summary>
         /// The options for the server
         /// </summary>
-        private readonly SimpleHttpServerOptions options;
+        private readonly SimpleHttpServerOptions _options;
 
         #endregion
 
@@ -38,7 +37,7 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public int Port
         {
-            get { return server.Port; }
+            get { return _server.Port; }
         }
 
         #endregion
@@ -53,9 +52,9 @@ namespace MikeRogers.NtlmProxy
         /// <param name="serverOptions">Configuration options for the server.</param>
         public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
         {
-            options = serverOptions ?? SimpleHttpServerOptions.DefaultOptions;
-            server = new SimpleHttpServer(ProcessRequest, serverOptions);
-            hostname = proxiedHostname;
+            _options = serverOptions ?? SimpleHttpServerOptions.DefaultOptions;
+            _server = new SimpleHttpServer(ProcessRequest, serverOptions);
+            _hostname = proxiedHostname;
         }
 
         #endregion
@@ -68,7 +67,7 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public void Dispose()
         {
-            server.Dispose();
+            _server.Dispose();
         }
 
         #endregion
@@ -86,7 +85,7 @@ namespace MikeRogers.NtlmProxy
             var credential = CredentialCache.DefaultNetworkCredentials;
             var myCache = new CredentialCache
             {
-                {hostname, "NTLM", credential}
+                {_hostname, "NTLM", credential}
             };
 
             var handler = new HttpClientHandler
@@ -98,7 +97,7 @@ namespace MikeRogers.NtlmProxy
             using (var client = new HttpClient(handler))
             {
                 var httpMethod = new HttpMethod(context.Request.HttpMethod);
-                var target = new Uri(hostname, context.Request.Url.PathAndQuery);
+                var target = new Uri(_hostname, context.Request.Url.PathAndQuery);
                 var content = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 
                 // New implementation suggested by https://github.com/blabla4
@@ -107,7 +106,7 @@ namespace MikeRogers.NtlmProxy
                 {
                     var contentType = context.Request.ContentType;
 
-                    if (options.AngularContentType && contentType != null)
+                    if (_options.AngularContentType && contentType != null)
                     {
                         // Thank you to https://github.com/svantreeck
                         contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
@@ -117,13 +116,13 @@ namespace MikeRogers.NtlmProxy
                 }
 
                 // Add headers ('thank you' to https://github.com/svantreeck)
-                options.RequestHeaders.ToList().ForEach(x => request.Headers.Add(x.Key, x.Value));
+                _options.RequestHeaders.ToList().ForEach(x => request.Headers.Add(x.Key, x.Value));
 
-                if (options.DuplicateRequestHeaders)
+                if (_options.AreHeadersDuplicated)
                 {
                     foreach (var key in context.Request.Headers.AllKeys)
                     {
-                        if (!options.ForbiddenHeaders.Contains(key))
+                        if (!_options.ExcludedHeaders.Contains(key))
                         {
                             request.Headers.TryAddWithoutValidation(key, context.Request.Headers[key]);
                         }

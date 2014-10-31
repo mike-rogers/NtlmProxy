@@ -19,12 +19,12 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// The <see cref="HttpListener"/> instance for creating a small proxy server
         /// </summary>
-        private readonly HttpListener listener;
+        private readonly HttpListener _listener;
 
         /// <summary>
         /// The function that handles incoming proxied requests
         /// </summary>
-        private readonly Func<HttpListenerContext, Task<HttpResponseMessage>> requestHandler;
+        private readonly Func<HttpListenerContext, Task<HttpResponseMessage>> _requestHandler;
 
         #endregion
 
@@ -59,17 +59,17 @@ namespace MikeRogers.NtlmProxy
             }
 
             Port = options.Port == 0 ? GetEmptyPort() : options.Port;
-            requestHandler = handler;
+            _requestHandler = handler;
 
-            listener = new HttpListener
+            _listener = new HttpListener
             {
                 AuthenticationSchemes = options.AuthenticationScheme,
                 IgnoreWriteExceptions = true
             };
 
-            listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
+            _listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
 
-            listener.Start();
+            _listener.Start();
             StartListenLoop();
         }
 
@@ -83,7 +83,7 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public void Dispose()
         {
-            listener.Stop();
+            _listener.Stop();
         }
 
         #endregion
@@ -112,8 +112,8 @@ namespace MikeRogers.NtlmProxy
         {
             while (true)
             {
-                var context = await listener.GetContextAsync();
-                var response = await requestHandler(context);
+                var context = await _listener.GetContextAsync();
+                var response = await _requestHandler(context);
 
                 using (var stream = context.Response.OutputStream)
                 {

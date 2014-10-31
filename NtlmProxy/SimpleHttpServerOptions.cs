@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net;
-using System.Net.Cache;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
 {
@@ -14,25 +9,25 @@ namespace MikeRogers.NtlmProxy
 
         public Dictionary<string, string> RequestHeaders { get; set; }
 
-        public int Port { get; set; }
+        public int Port { get; private set; }
 
         public AuthenticationSchemes AuthenticationScheme { get; set; }
 
         /// <summary>
         /// Should the proxy duplicate individual request headers?
         /// </summary>
-        public bool DuplicateRequestHeaders { get; set; }
+        public bool AreHeadersDuplicated { get; set; }
 
         /// <summary>
-        /// List of headers to not repeat when DuplicateRequestHeaders is true
+        /// List of headers to not repeat when AreHeadersDuplicated is true
         /// </summary>
-        public List<string> ForbiddenHeaders { get; set; }
+        public List<string> ExcludedHeaders { get; private set; }
 
         public SimpleHttpServerOptions()
         {
             RequestHeaders = new Dictionary<string, string>();
             AuthenticationScheme = AuthenticationSchemes.Anonymous;
-            ForbiddenHeaders = new List<string>() { "Host", "Accept-Encoding" };
+            ExcludedHeaders = new List<string> { "Host", "Accept-Encoding" };
         }
 
         public static readonly SimpleHttpServerOptions DefaultOptions = new SimpleHttpServerOptions
@@ -40,7 +35,7 @@ namespace MikeRogers.NtlmProxy
             Port = 0,
             AuthenticationScheme = AuthenticationSchemes.Anonymous,
             AngularContentType = false,
-            DuplicateRequestHeaders = false,
+            AreHeadersDuplicated = false,
             RequestHeaders = new Dictionary<string, string>()
         };
     }
