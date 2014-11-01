@@ -43,7 +43,7 @@ To see a comprehensive list of options, see the comments for [SimpleHttpServerOp
 You can download the zipped DLL in the Releases section above, or you can use NuGet:
 
 ```xml
-  <package id="MikeRogers.NtlmProxy" version="1.0.0" targetFramework="net45" />
+  <package id="MikeRogers.NtlmProxy" version="1.2.0" targetFramework="net45" />
 ```
 
 ## Why do you keep saying 'naively'?
