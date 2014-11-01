@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>MikeRogers.NtlmProxy</id>
-    <version>1.1.0.0</version>
+    <version>1.2.0.0</version>
     <title>NtlmProxy Library</title>
     <authors>Mike Rogers</authors>
     <owners>Mike Rogers</owners>
@@ -12,6 +12,9 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Provides a proxy that adds NTLM data for the current user, for use on systems requiring NTLM</description>
     <releaseNotes>
+      1.2 - Added support for proxying options, including
+              * Optional proxying of HTTP headers
+              * Support for specific Angular.JS Content-Type
       1.1 - Added support for POST, PUT, DELETE verbs
       1.0 - Provides a proxy that adds NTLM data for the current user into a web request.
     </releaseNotes>
