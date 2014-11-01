@@ -10,19 +10,9 @@ I wanted to use [PhantomJS](http://phantomjs.org/) to run headlessly, which woul
 
 That's why I wrote this little library.
 
-With a simple `using` directive it will create a tiny web proxy and niavely forward any requests sent to it on to a target URL, with NTLM headers for the current user.
+With a simple `using` directive it will create a tiny web proxy and naively forward any requests sent to it on to a target URL, with NTLM headers for the current user.
 
 It's pretty simple to use:
-
-```csharp
-    using (var proxy = new NtlmProxy(new Uri("http://localhost:8081/"), 3999))
-    {
-		// Make your requests here to http://localhost:3999/whatever
-    }
-```
-
-You can also leave off the port number to have a port auto-assigned:
-
 
 ```csharp
     using (var proxy = new NtlmProxy(new Uri("http://localhost:8081/")))
@@ -30,6 +20,23 @@ You can also leave off the port number to have a port auto-assigned:
 		// Make your requests here to http://localhost:3999/{0}, proxy.Port
     }
 ```
+
+You can pass in your own custom options:
+
+```csharp
+    var options = new SimpleHttpServerOptions
+	{
+	    Port = 3999,
+		AuthenticationScheme = AuthenticationSchemes.None
+	};
+
+    using (var proxy = new NtlmProxy(new Uri("http://localhost:8081/"), options))
+    {
+		// Make your requests here to http://localhost:3999/whatever
+    }
+```
+
+To see a comprehensive list of options, see the comments for [SimpleHttpServerOptions.cs](https://github.com/mike-rogers/NtlmProxy/blob/master/NtlmProxy/SimpleHttpServerOptions.cs).
 
 ## How do I install it?
 
