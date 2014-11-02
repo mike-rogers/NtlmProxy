@@ -1,5 +1,7 @@
 # NTLM Proxy
 
+Current status: [![Build status](https://ci.appveyor.com/api/projects/status/jtyvkirqtc7ki0kh?svg=true)](https://ci.appveyor.com/project/mike-rogers/ntlmproxy)
+
 So my team is using [Selenium](http://docs.seleniumhq.org/) [WebDriver](http://docs.seleniumhq.org/projects/webdriver/) to test our web application, and it takes balls forever to run on our test browser. Our test browser is [Firefox](http://www.mozilla.org/en-US/firefox/fx/), which, with a name like that, you'd think would be... I dunno, zippy.
 
 Anyway.

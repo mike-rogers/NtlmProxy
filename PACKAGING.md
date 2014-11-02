@@ -4,6 +4,8 @@
 
 Make sure to update the assembly version and release notes in `NtlmProxy/MikeRogers.NtlmProxy.nuspec`.
 
+Update the build version number in Appveyor.
+
 ## Do the NuGet dance
 
 See [here](http://docs.nuget.org/docs/creating-packages/creating-and-publishing-a-package).
