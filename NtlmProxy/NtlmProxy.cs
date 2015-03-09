@@ -55,7 +55,7 @@ namespace MikeRogers.NtlmProxy
         /// <param name="serverOptions">Configuration options for the server.</param>
         public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
         {
-            _options = serverOptions ?? SimpleHttpServerOptions.DefaultOptions;
+            _options = serverOptions ?? SimpleHttpServerOptions.GetDefaultOptions();
             _server = new SimpleHttpServer(ProcessRequest, serverOptions);
             _hostname = proxiedHostname;
         }

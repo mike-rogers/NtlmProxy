@@ -51,7 +51,7 @@ namespace MikeRogers.NtlmProxy
             Func<HttpListenerContext, Task<HttpResponseMessage>> handler,
             SimpleHttpServerOptions options = null)
         {
-            options = options ?? SimpleHttpServerOptions.DefaultOptions;
+            options = options ?? SimpleHttpServerOptions.GetDefaultOptions();
 
             if (options.RequestHeaders == null)
             {

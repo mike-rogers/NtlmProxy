@@ -40,8 +40,10 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test, TestCaseSource("HttpMethods")]
         public void ShouldProxyCredentialsOnRequest(Method method)
         {
-            var options = SimpleHttpServerOptions.DefaultOptions;
-            options.AuthenticationScheme = AuthenticationSchemes.Ntlm;
+            var serverOptions = SimpleHttpServerOptions.GetDefaultOptions();
+            var proxyOptions = SimpleHttpServerOptions.GetDefaultOptions();
+            serverOptions.AuthenticationScheme = AuthenticationSchemes.Ntlm;
+            proxyOptions.AuthenticationScheme = AuthenticationSchemes.Ntlm;
 
             var serverAssertion = new Action<HttpListenerContext>(context =>
             {
@@ -72,7 +74,7 @@ namespace MikeRogers.NtlmProxy.Tests
                 Assert.That(response.Content, Is.EqualTo(ExpectedResultText));
             });
 
-            ExecuteTestInContext(options, serverAssertion, clientAssertion);
+            ExecuteTestInContext(serverOptions, proxyOptions, serverAssertion, clientAssertion);
         }
 
         /// <summary>
@@ -83,7 +85,7 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test]
         public void ShouldRemoveCharsetForAngularOption()
         {
-            var options = SimpleHttpServerOptions.DefaultOptions;
+            var options = SimpleHttpServerOptions.GetDefaultOptions();
             options.HasAngularContentType = true;
 
             var serverAssertion = new Action<HttpListenerContext>(context =>
@@ -103,7 +105,7 @@ namespace MikeRogers.NtlmProxy.Tests
                 client.Execute(request);
             });
 
-            ExecuteTestInContext(options, serverAssertion, clientAssertion);
+            ExecuteTestInContext(options, SimpleHttpServerOptions.GetDefaultOptions(), serverAssertion, clientAssertion);
         }
 
         /// <summary>
@@ -112,8 +114,9 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test]
         public void ShouldInjectHeadersIntoProxiedRequest()
         {
-            var options = SimpleHttpServerOptions.DefaultOptions;
-            options.RequestHeaders = new Dictionary<string, string>
+            var serverOptions = SimpleHttpServerOptions.GetDefaultOptions();
+            var proxyOptions = SimpleHttpServerOptions.GetDefaultOptions();
+            proxyOptions.RequestHeaders = new Dictionary<string, string>
             {
                 {"HeaderOne", "Donkey"},
                 {"HeaderTwo", "Pony"}
@@ -136,7 +139,7 @@ namespace MikeRogers.NtlmProxy.Tests
                 client.Execute(request);
             });
 
-            ExecuteTestInContext(options, serverAssertion, clientAssertion);
+            ExecuteTestInContext(serverOptions, proxyOptions, serverAssertion, clientAssertion);
         }
 
         /// <summary>
@@ -146,7 +149,7 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test]
         public void ShouldDuplicateHeadersInProxiedRequest()
         {
-            var options = new SimpleHttpServerOptions { AreHeadersDuplicated = true };
+            var proxyOptions = new SimpleHttpServerOptions { AreHeadersDuplicated = true };
 
             var serverAssertion = new Action<HttpListenerContext>(context =>
             {
@@ -167,7 +170,7 @@ namespace MikeRogers.NtlmProxy.Tests
                 client.Execute(request);
             });
 
-            ExecuteTestInContext(options, serverAssertion, clientAssertion);
+            ExecuteTestInContext(SimpleHttpServerOptions.GetDefaultOptions(), proxyOptions, serverAssertion, clientAssertion);
         }
 
         /// <summary>
@@ -177,7 +180,7 @@ namespace MikeRogers.NtlmProxy.Tests
         [Test]
         public void ShouldIncludeProxiedResponseDataBackToClient()
         {
-            var options = SimpleHttpServerOptions.DefaultOptions;
+            var options = SimpleHttpServerOptions.GetDefaultOptions();
 
             var clientAssertion = new Action<NtlmProxy>(proxy =>
             {
@@ -195,7 +198,39 @@ namespace MikeRogers.NtlmProxy.Tests
                 Assert.That(response.StatusDescription, Is.EqualTo("OK"));
             });
 
-            ExecuteTestInContext(options, null, clientAssertion);
+            ExecuteTestInContext(options, SimpleHttpServerOptions.GetDefaultOptions(), null, clientAssertion);
+        }
+
+        /// <summary>
+        /// Should proxy simple GET request per read me instructions.
+        /// </summary>
+        [Test]
+        public void ShouldProxySimpleGetRequestOnCustomPort()
+        {
+            var proxyOptions = new SimpleHttpServerOptions
+            {
+                Port = 3999
+            };
+
+            var serverOptions = SimpleHttpServerOptions.GetDefaultOptions();
+
+            var clientAssertion = new Action<NtlmProxy>(proxy =>
+            {
+                var proxyUrl = string.Format("http://localhost:{0}/", proxy.Port);
+
+                var client = new RestClient(proxyUrl);
+
+                var request = new RestRequest("/", Method.GET);
+
+                var response = client.Execute(request);
+
+                Assert.That(response.ContentLength, Is.EqualTo(13));
+                Assert.That(response.ContentType, Is.Empty);
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(response.StatusDescription, Is.EqualTo("OK"));
+            });
+
+            ExecuteTestInContext(serverOptions, proxyOptions, null, clientAssertion);
         }
 
         /// <summary>
@@ -204,10 +239,12 @@ namespace MikeRogers.NtlmProxy.Tests
         /// Finally it issues a web request to the proxy.
         /// </summary>
         /// <param name="serverOptions">The options for the running HTTP server.</param>
+        /// <param name="proxyOptions">The options for the running proxy server.</param>
         /// <param name="serverAssertion">The configuration/assertion code to run in the context of the server.</param>
         /// <param name="clientAssertion">The configuration/assertion code to run in the context of the client.</param>
         private static void ExecuteTestInContext(
             SimpleHttpServerOptions serverOptions,
+            SimpleHttpServerOptions proxyOptions,
             Action<HttpListenerContext> serverAssertion,
             Action<NtlmProxy> clientAssertion)
         {
@@ -230,7 +267,7 @@ namespace MikeRogers.NtlmProxy.Tests
             }, serverOptions))
             {
                 var serverUri = new Uri(string.Format("http://localhost:{0}/", server.Port));
-                using (var proxy = new NtlmProxy(serverUri, serverOptions))
+                using (var proxy = new NtlmProxy(serverUri, proxyOptions))
                 {
                     clientAssertion(proxy);
                 }

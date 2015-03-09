@@ -24,7 +24,7 @@ namespace MikeRogers.NtlmProxy
         /// Gets the port.
         /// </summary>
         /// <value>The port.</value>
-        public int Port { get; private set; }
+        public int Port { get; set; }
 
         /// <summary>
         /// Gets or sets the authentication scheme.
@@ -55,13 +55,16 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// The default options
         /// </summary>
-        public static readonly SimpleHttpServerOptions DefaultOptions = new SimpleHttpServerOptions
+        public static SimpleHttpServerOptions GetDefaultOptions()
         {
-            Port = 0,
-            AuthenticationScheme = AuthenticationSchemes.Anonymous,
-            HasAngularContentType = false,
-            AreHeadersDuplicated = false,
-            RequestHeaders = new Dictionary<string, string>()
-        };
+            return new SimpleHttpServerOptions
+            {
+                Port = 0,
+                AuthenticationScheme = AuthenticationSchemes.Anonymous,
+                HasAngularContentType = false,
+                AreHeadersDuplicated = false,
+                RequestHeaders = new Dictionary<string, string>()
+            };
+        }
     }
 }
