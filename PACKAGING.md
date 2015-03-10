@@ -2,7 +2,7 @@
 
 ## Update files
 
-Make sure to update the assembly version and release notes in `NtlmProxy/MikeRogers.NtlmProxy.nuspec`.
+Make sure to update the assembly version, the release notes and version number in `NtlmProxy/MikeRogers.NtlmProxy.nuspec`, and the version number in the README file's example NuGet XML.
 
 Update the build version number in Appveyor.
 
@@ -14,7 +14,7 @@ You'll probably want to install the Chocolatey `NuGet.CommandLine` package.
 
 ## The command that pays
 
-... is this:
+... after compiling in Release mode, is this:
 
     (cd NtlmProxy && NuGet Pack NtlmProxy.csproj -Prop Configuration=Release)
 
