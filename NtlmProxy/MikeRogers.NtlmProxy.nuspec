@@ -6,9 +6,9 @@
     <title>NtlmProxy Library</title>
     <authors>Mike Rogers</authors>
     <owners>Mike Rogers</owners>
-    <licenseUrl>https://raw2.github.com/mike-rogers/NtlmProxy/master/LICENSE</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/mike-rogers/NtlmProxy/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/mike-rogers/NtlmProxy</projectUrl>
-    <iconUrl>https://raw2.github.com/mike-rogers/NtlmProxy/master/icon.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/mike-rogers/NtlmProxy/master/icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Provides a proxy that adds NTLM data for the current user, for use on systems requiring NTLM</description>
     <releaseNotes>
