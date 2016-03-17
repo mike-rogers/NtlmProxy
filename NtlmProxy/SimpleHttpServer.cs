@@ -70,7 +70,9 @@ namespace MikeRogers.NtlmProxy
             _listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
 
             _listener.Start();
-            StartListenLoop();
+
+			// Managed tasks enables catchable exceptions
+            Task.Run(StartListenLoop);
         }
 
         #endregion
@@ -108,7 +110,7 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// Starts the listen loop.
         /// </summary>
-        private async void StartListenLoop()
+        private async Task StartListenLoop()
         {
             while (true)
             {

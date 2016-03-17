@@ -42,7 +42,12 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public List<string> ExcludedHeaders { get; private set; }
 
-        /// <summary>
+		/// <summary>
+		/// Optional ovverides default credentials with explicit network credentials
+		/// </summary>
+	    public NetworkCredential NetworkCredentials { get; set; }
+
+	    /// <summary>
         /// Initializes a new instance of the <see cref="SimpleHttpServerOptions"/> class.
         /// </summary>
         public SimpleHttpServerOptions()
