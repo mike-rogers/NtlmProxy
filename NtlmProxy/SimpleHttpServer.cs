@@ -71,7 +71,7 @@ namespace MikeRogers.NtlmProxy
 
             _listener.Start();
 
-			// Managed tasks enables catchable exceptions
+            // Managed tasks enables catchable exceptions
             Task.Run<Task>(() => StartListenLoop());
         }
 

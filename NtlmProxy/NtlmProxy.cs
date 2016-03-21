@@ -85,9 +85,9 @@ namespace MikeRogers.NtlmProxy
         /// <returns>A task thread that resolves into an HTTP response.</returns>
         private async Task<HttpResponseMessage> ProcessRequest(HttpListenerContext context)
         {
-			var credential = _options.NetworkCredentials ?? CredentialCache.DefaultNetworkCredentials;
+            var credential = _options.NetworkCredentials ?? CredentialCache.DefaultNetworkCredentials;
 
-			var myCache = new CredentialCache
+            var myCache = new CredentialCache
             {
                 {_hostname, "NTLM", credential}
             };
