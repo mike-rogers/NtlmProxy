@@ -109,10 +109,10 @@ namespace MikeRogers.NtlmProxy
                 {
                     var contentType = context.Request.ContentType;
 
-                    if (_options.HasAngularContentType && contentType != null)
+                    if (_options.StripCharsetFromHeaders && contentType != null)
                     {
                         // Thank you to https://github.com/svantreeck
-                        contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
+                        contentType = Regex.Replace(contentType, ";\\s?charset=(.)*", string.Empty);
                     }
 
                     request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);
