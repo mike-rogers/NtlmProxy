@@ -17,10 +17,12 @@ namespace MikeRogers.NtlmProxy
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            if (_maxRetries == 0)
             {
-                Content = new ByteArrayContent(new byte[0])
-            };
+                return await base.SendAsync(request, cancellationToken);
+            }
+
+            var response = EmptyResponseMesasge();
 
             for (var i = 0; i < _maxRetries; i++)
             {
@@ -42,6 +44,14 @@ namespace MikeRogers.NtlmProxy
             }
 
             return response;
+        }
+
+        private static HttpResponseMessage EmptyResponseMesasge()
+        {
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            {
+                Content = new ByteArrayContent(new byte[0])
+            };
         }
 
         private static void SleepBeforeRetry(int multiplier)

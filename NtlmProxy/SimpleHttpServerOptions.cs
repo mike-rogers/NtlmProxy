@@ -47,6 +47,9 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public NetworkCredential NetworkCredential { get; set; }
 
+        /// <summary>
+        /// Maximum number of http request retries
+        /// </summary>
         public int MaxRetries { get; set; }
 
         /// <summary>
@@ -58,7 +61,6 @@ namespace MikeRogers.NtlmProxy
             AuthenticationScheme = AuthenticationSchemes.Anonymous;
             ExcludedHeaders = new List<string> { "Host", "Accept-Encoding" };
             NetworkCredential = CredentialCache.DefaultNetworkCredentials;
-            MaxRetries = 1;
         }
 
         /// <summary>
@@ -73,8 +75,7 @@ namespace MikeRogers.NtlmProxy
                 StripCharsetFromHeaders = false,
                 AreHeadersDuplicated = false,
                 RequestHeaders = new Dictionary<string, string>(),
-                NetworkCredential = CredentialCache.DefaultNetworkCredentials,
-                MaxRetries = 1
+                NetworkCredential = CredentialCache.DefaultNetworkCredentials
             };
         }
     }
