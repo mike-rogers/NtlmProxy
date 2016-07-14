@@ -43,6 +43,11 @@ namespace MikeRogers.NtlmProxy
         public List<string> ExcludedHeaders { get; private set; }
 
         /// <summary>
+        /// Network credentials for authentication
+        /// </summary>
+        public NetworkCredential NetworkCredential { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SimpleHttpServerOptions"/> class.
         /// </summary>
         public SimpleHttpServerOptions()
@@ -50,6 +55,7 @@ namespace MikeRogers.NtlmProxy
             RequestHeaders = new Dictionary<string, string>();
             AuthenticationScheme = AuthenticationSchemes.Anonymous;
             ExcludedHeaders = new List<string> { "Host", "Accept-Encoding" };
+            NetworkCredential = CredentialCache.DefaultNetworkCredentials;
         }
 
         /// <summary>
@@ -63,7 +69,8 @@ namespace MikeRogers.NtlmProxy
                 AuthenticationScheme = AuthenticationSchemes.Anonymous,
                 StripCharsetFromHeaders = false,
                 AreHeadersDuplicated = false,
-                RequestHeaders = new Dictionary<string, string>()
+                RequestHeaders = new Dictionary<string, string>(),
+                NetworkCredential = CredentialCache.DefaultNetworkCredentials
             };
         }
     }

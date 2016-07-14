@@ -85,7 +85,7 @@ namespace MikeRogers.NtlmProxy
         /// <returns>A task thread that resolves into an HTTP response.</returns>
         private async Task<HttpResponseMessage> ProcessRequest(HttpListenerContext context)
         {
-            var credential = CredentialCache.DefaultNetworkCredentials;
+            var credential = _options.NetworkCredential;
             var myCache = new CredentialCache
             {
                 {_hostname, "NTLM", credential}
@@ -94,10 +94,11 @@ namespace MikeRogers.NtlmProxy
             var handler = new HttpClientHandler
             {
                 AllowAutoRedirect = true,
-                Credentials = myCache
+                Credentials = myCache,
+                PreAuthenticate = true
             };
 
-            using (var client = new HttpClient(handler))
+            using (var client = new HttpClient(new RetryHandler(handler)))
             {
                 var httpMethod = new HttpMethod(context.Request.HttpMethod);
                 var target = new Uri(_hostname, context.Request.Url.PathAndQuery);
@@ -105,7 +106,7 @@ namespace MikeRogers.NtlmProxy
 
                 // New implementation suggested by https://github.com/blabla4
                 var request = new HttpRequestMessage(httpMethod, target);
-                if (content != String.Empty)
+                if (content != string.Empty)
                 {
                     var contentType = context.Request.ContentType;
 
