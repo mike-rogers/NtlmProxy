@@ -8,10 +8,12 @@ namespace MikeRogers.NtlmProxy
 {
     internal class RetryHandler : DelegatingHandler
     {
-        private const int MaxRetries = 3;
+        private readonly int _maxRetries;
 
-        public RetryHandler(HttpMessageHandler innerHandler) : base(innerHandler)
-        { }
+        public RetryHandler(HttpMessageHandler innerHandler, int maxRetries) : base(innerHandler)
+        {
+            _maxRetries = maxRetries;
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -20,7 +22,7 @@ namespace MikeRogers.NtlmProxy
                 Content = new ByteArrayContent(new byte[0])
             };
 
-            for (var i = 0; i < MaxRetries; i++)
+            for (var i = 0; i < _maxRetries; i++)
             {
                 try
                 {

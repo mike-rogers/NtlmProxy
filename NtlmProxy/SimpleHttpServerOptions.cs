@@ -47,6 +47,8 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public NetworkCredential NetworkCredential { get; set; }
 
+        public int MaxRetries { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SimpleHttpServerOptions"/> class.
         /// </summary>
@@ -56,6 +58,7 @@ namespace MikeRogers.NtlmProxy
             AuthenticationScheme = AuthenticationSchemes.Anonymous;
             ExcludedHeaders = new List<string> { "Host", "Accept-Encoding" };
             NetworkCredential = CredentialCache.DefaultNetworkCredentials;
+            MaxRetries = 1;
         }
 
         /// <summary>
@@ -70,7 +73,8 @@ namespace MikeRogers.NtlmProxy
                 StripCharsetFromHeaders = false,
                 AreHeadersDuplicated = false,
                 RequestHeaders = new Dictionary<string, string>(),
-                NetworkCredential = CredentialCache.DefaultNetworkCredentials
+                NetworkCredential = CredentialCache.DefaultNetworkCredentials,
+                MaxRetries = 1
             };
         }
     }

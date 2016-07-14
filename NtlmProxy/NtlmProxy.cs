@@ -98,7 +98,7 @@ namespace MikeRogers.NtlmProxy
                 PreAuthenticate = true
             };
 
-            using (var client = new HttpClient(new RetryHandler(handler)))
+            using (var client = new HttpClient(new RetryHandler(handler, _options.MaxRetries)))
             {
                 var httpMethod = new HttpMethod(context.Request.HttpMethod);
                 var target = new Uri(_hostname, context.Request.Url.PathAndQuery);
