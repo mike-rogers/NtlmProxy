@@ -128,7 +128,7 @@ namespace MikeRogers.NtlmProxy
                         context.Response.ContentType = response.Content.Headers.ContentType.ToString();
                     }
 
-                    stream.Write(bytes, 0, bytes.Count());
+                    stream.Write(bytes, 0, bytes.Length);
                     stream.Close();
                 }
             }

@@ -9,10 +9,10 @@ namespace MikeRogers.NtlmProxy
     public sealed class SimpleHttpServerOptions
     {
         /// <summary>
-        /// Gets or sets a value indicating whether this instance has an Angular content-type header.
+        /// Gets or sets a value indicating whether charset should be stripped from the content-type header.
         /// </summary>
-        /// <value><c>true</c> if this instance has angular content type; otherwise, <c>false</c>.</value>
-        public bool HasAngularContentType { get; set; }
+        /// <value><c>true</c> if charset should be stripped; otherwise, <c>false</c>.</value>
+        public bool StripCharsetFromHeaders { get; set; }
 
         /// <summary>
         /// Gets or sets the request headers.
@@ -43,6 +43,16 @@ namespace MikeRogers.NtlmProxy
         public List<string> ExcludedHeaders { get; private set; }
 
         /// <summary>
+        /// Network credentials for authentication
+        /// </summary>
+        public NetworkCredential NetworkCredential { get; set; }
+
+        /// <summary>
+        /// Maximum number of http request retries
+        /// </summary>
+        public int MaxRetries { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SimpleHttpServerOptions"/> class.
         /// </summary>
         public SimpleHttpServerOptions()
@@ -50,6 +60,7 @@ namespace MikeRogers.NtlmProxy
             RequestHeaders = new Dictionary<string, string>();
             AuthenticationScheme = AuthenticationSchemes.Anonymous;
             ExcludedHeaders = new List<string> { "Host", "Accept-Encoding" };
+            NetworkCredential = CredentialCache.DefaultNetworkCredentials;
         }
 
         /// <summary>
@@ -61,9 +72,10 @@ namespace MikeRogers.NtlmProxy
             {
                 Port = 0,
                 AuthenticationScheme = AuthenticationSchemes.Anonymous,
-                HasAngularContentType = false,
+                StripCharsetFromHeaders = false,
                 AreHeadersDuplicated = false,
-                RequestHeaders = new Dictionary<string, string>()
+                RequestHeaders = new Dictionary<string, string>(),
+                NetworkCredential = CredentialCache.DefaultNetworkCredentials
             };
         }
     }
