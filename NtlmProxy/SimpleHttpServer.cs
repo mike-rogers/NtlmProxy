@@ -24,7 +24,7 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// The function that handles incoming proxied requests
         /// </summary>
-        private readonly Func<HttpListenerContext, Task<HttpResponseMessage>> _requestHandler;
+        private readonly Func<HttpListenerContext, Task<ServerResponse>> _requestHandler;
 
         #endregion
 
@@ -37,6 +37,8 @@ namespace MikeRogers.NtlmProxy
         /// <value>The port.</value>
         public int Port { get; private set; }
 
+        public Task ServerTask { get; private set;  }
+
         #endregion Properties
 
 
@@ -48,7 +50,7 @@ namespace MikeRogers.NtlmProxy
         /// <param name="handler">The function that handles incoming proxied requests.</param>
         /// <param name="options">Configuration options for the server.</param>
         public SimpleHttpServer(
-            Func<HttpListenerContext, Task<HttpResponseMessage>> handler,
+            Func<HttpListenerContext, Task<ServerResponse>> handler,
             SimpleHttpServerOptions options = null)
         {
             options = options ?? SimpleHttpServerOptions.GetDefaultOptions();
@@ -70,7 +72,7 @@ namespace MikeRogers.NtlmProxy
             _listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
 
             _listener.Start();
-            StartListenLoop();
+            ServerTask = Task.Run(StartListenLoop);
         }
 
         #endregion
@@ -108,7 +110,7 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// Starts the listen loop.
         /// </summary>
-        private async void StartListenLoop()
+        private async Task StartListenLoop()
         {
             while (true)
             {
@@ -117,16 +119,17 @@ namespace MikeRogers.NtlmProxy
 
                 using (var stream = context.Response.OutputStream)
                 {
-                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    var bytes = await response.Message.Content.ReadAsByteArrayAsync();
 
                     // Copy response attributes back to the proxy
                     context.Response.ContentLength64 = bytes.Length;
-                    context.Response.StatusCode = (int)response.StatusCode;
-                    context.Response.StatusDescription = response.StatusCode.ToString();
-                    if (response.Content.Headers.ContentType != null)
+                    context.Response.StatusCode = (int)response.Message.StatusCode;
+                    context.Response.StatusDescription = response.Message.StatusCode.ToString();
+                    if (response.Message.Content.Headers.ContentType != null)
                     {
-                        context.Response.ContentType = response.Content.Headers.ContentType.ToString();
+                        context.Response.ContentType = response.Message.Content.Headers.ContentType.ToString();
                     }
+                    context.Response.Cookies = response.Cookies;
 
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();

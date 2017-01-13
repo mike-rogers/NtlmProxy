@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -83,9 +84,9 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         /// <param name="context">The context.</param>
         /// <returns>A task thread that resolves into an HTTP response.</returns>
-        private async Task<HttpResponseMessage> ProcessRequest(HttpListenerContext context)
+        private async Task<ServerResponse> ProcessRequest(HttpListenerContext context)
         {
-            var credential = CredentialCache.DefaultNetworkCredentials;
+            var credential = _options.NetworkCredentials ?? CredentialCache.DefaultNetworkCredentials;
             var myCache = new CredentialCache
             {
                 {_hostname, "NTLM", credential}
@@ -94,8 +95,12 @@ namespace MikeRogers.NtlmProxy
             var handler = new HttpClientHandler
             {
                 AllowAutoRedirect = true,
-                Credentials = myCache
+                Credentials = myCache,
+                UseCookies = true,
+                CookieContainer = new CookieContainer()
             };
+
+            handler.CookieContainer.Add(_hostname, context.Request.Cookies);
 
             using (var client = new HttpClient(handler))
             {
@@ -132,7 +137,13 @@ namespace MikeRogers.NtlmProxy
                     }
                 }
 
-                return await client.SendAsync(request);
+                HttpResponseMessage response = await client.SendAsync(request);
+
+                return new ServerResponse
+                {
+                    Message = response,
+                    Cookies = handler.CookieContainer.GetCookies(target)
+                };
             }
         }
 
