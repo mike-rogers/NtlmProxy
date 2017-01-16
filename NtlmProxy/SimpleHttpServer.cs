@@ -72,7 +72,7 @@ namespace MikeRogers.NtlmProxy
             _listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
 
             _listener.Start();
-            ServerTask = Task.Run(StartListenLoop);
+            ServerTask = Task.Run<Task>(() => StartListenLoop());
         }
 
         #endregion

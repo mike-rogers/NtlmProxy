@@ -287,7 +287,10 @@ namespace MikeRogers.NtlmProxy.Tests
                     Content = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(ExpectedResultText)))
                 };
 
-                serverAssertion?.Invoke(context);
+                if (serverAssertion != null)
+                {
+                    serverAssertion.Invoke(context);
+                }
 
                 return Task.FromResult(new ServerResponse {Message = response});
             }, serverOptions))
@@ -298,7 +301,9 @@ namespace MikeRogers.NtlmProxy.Tests
                     clientAssertion(proxy);
                 }
 
-                if (server.ServerTask.Status == TaskStatus.Faulted && server.ServerTask.Exception?.InnerException != null)
+                if (server.ServerTask.Status == TaskStatus.Faulted &&
+                    server.ServerTask.Exception != null &&
+                    server.ServerTask.Exception.InnerException != null)
                 {
                     throw server.ServerTask.Exception.InnerException;
                 }
