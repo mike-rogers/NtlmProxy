@@ -23,12 +23,17 @@ namespace MikeRogers.NtlmProxy
 		/// <summary>
 		/// The simple HTTP server that accepts proxied requests
 		/// </summary>
-		public SimpleHttpServer Server { get; }
+		public SimpleHttpServer Server
+		{
+			get { return _server; }
+		}
 
 		/// <summary>
 		/// The options for the server
 		/// </summary>
 		private readonly SimpleHttpServerOptions _options;
+
+		private readonly SimpleHttpServer _server;
 
 		#endregion
 
@@ -38,7 +43,10 @@ namespace MikeRogers.NtlmProxy
 		/// <summary>
 		/// Gets the proxy server port.
 		/// </summary>
-		public int Port => Server.Port;
+		public int Port
+		{
+			get { return _server.Port; }
+		}
 
 		#endregion
 
@@ -53,7 +61,7 @@ namespace MikeRogers.NtlmProxy
 		public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
 		{
 			_options = serverOptions ?? SimpleHttpServerOptions.GetDefaultOptions();
-			Server = new SimpleHttpServer(ProcessRequest, serverOptions);
+			_server = new SimpleHttpServer(ProcessRequest, serverOptions);
 			_hostname = proxiedHostname;
 		}
 
