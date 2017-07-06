@@ -98,7 +98,7 @@ namespace MikeRogers.NtlmProxy
 
 			var handler = new HttpClientHandler
 			{
-				AllowAutoRedirect = true,
+				AllowAutoRedirect = false,
 				Credentials = myCache,
 				UseCookies = true,
 				CookieContainer = new CookieContainer()
@@ -121,7 +121,7 @@ namespace MikeRogers.NtlmProxy
 					if (_options.HasAngularContentType && contentType != null)
 					{
 						// Thank you to https://github.com/svantreeck
-						contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
+						contentType = Regex.Replace(contentType, @"\s?;charset=(.)*", string.Empty);
 					}
 
 					request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);

@@ -131,6 +131,18 @@ namespace MikeRogers.NtlmProxy
                     }
                     context.Response.Cookies = response.Cookies;
 
+                    if (context.Response.StatusCode == 302)
+                    {
+                        string content = response.Message.Content.ReadAsStringAsync().Result; // <html> => </html>
+                        var anchorToEnd = content.Substring(content.IndexOf("<a href=\"")); // <a> => </html>
+
+                        var anchor = anchorToEnd.Substring(0, anchorToEnd.IndexOf("</a>") + 4); // <a> => </a>
+                        var urlStart = anchor.Substring(anchor.IndexOf("\"") + 1);
+
+                        var url = urlStart.Substring(0, urlStart.IndexOf("\""));
+                        context.Response.Redirect(url);
+                    }
+
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();
                 }
