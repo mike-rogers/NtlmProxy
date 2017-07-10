@@ -71,3 +71,4 @@ $RECYCLE.BIN/
 ## Mac detritus
 .DS_Store
 /.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json
