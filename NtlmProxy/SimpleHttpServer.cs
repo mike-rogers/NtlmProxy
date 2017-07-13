@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace MikeRogers.NtlmProxy
 {
@@ -140,6 +141,7 @@ namespace MikeRogers.NtlmProxy
                         var urlStart = anchor.Substring(anchor.IndexOf("\"") + 1);
 
                         var url = urlStart.Substring(0, urlStart.IndexOf("\""));
+                        url = HttpUtility.HtmlDecode(url);
                         context.Response.Redirect(url);
                     }
 
