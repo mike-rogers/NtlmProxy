@@ -24,4 +24,7 @@
     <tags>Selenium PhantomJS headless proxy ntlm</tags>
     <dependencies />
   </metadata>
+  <files>
+    <file src="bin\Release\MikeRogers.NtlmProxy.dll" target="lib\net452" />
+  </files>
 </package>
