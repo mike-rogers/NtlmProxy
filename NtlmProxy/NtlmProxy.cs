@@ -8,134 +8,149 @@ using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
 {
-    /// <summary>
-    /// Class NtlmProxy. This class cannot be inherited.
-    /// </summary>
-    public sealed class NtlmProxy : IDisposable
-    {
-        #region Fields
+	/// <summary>
+	/// Class NtlmProxy. This class cannot be inherited.
+	/// </summary>
+	public sealed class NtlmProxy : IDisposable
+	{
+		#region Fields
 
-        /// <summary>
-        /// The hostname to which incoming requests will be proxied
-        /// </summary>
-        private readonly Uri _hostname;
+		/// <summary>
+		/// The hostname to which incoming requests will be proxied
+		/// </summary>
+		private readonly Uri _hostname;
 
-        /// <summary>
-        /// The simple HTTP server that accepts proxied requests
-        /// </summary>
-        private readonly SimpleHttpServer _server;
+		/// <summary>
+		/// The simple HTTP server that accepts proxied requests
+		/// </summary>
+		public SimpleHttpServer Server
+		{
+			get { return _server; }
+		}
 
-        /// <summary>
-        /// The options for the server
-        /// </summary>
-        private readonly SimpleHttpServerOptions _options;
+		/// <summary>
+		/// The options for the server
+		/// </summary>
+		private readonly SimpleHttpServerOptions _options;
 
-        #endregion
+		private readonly SimpleHttpServer _server;
 
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the proxy server port.
-        /// </summary>
-        public int Port
-        {
-            get { return _server.Port; }
-        }
-
-        #endregion
+		#endregion
 
 
-        #region Constructors
+		#region Properties
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NtlmProxy"/> class.
-        /// </summary>
-        /// <param name="proxiedHostname">The proxied hostname.</param>
-        /// <param name="serverOptions">Configuration options for the server.</param>
-        public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
-        {
-            _options = serverOptions ?? SimpleHttpServerOptions.GetDefaultOptions();
-            _server = new SimpleHttpServer(ProcessRequest, serverOptions);
-            _hostname = proxiedHostname;
-        }
+		/// <summary>
+		/// Gets the proxy server port.
+		/// </summary>
+		public int Port
+		{
+			get { return _server.Port; }
+		}
 
-        #endregion
+		#endregion
 
 
-        #region Public Methods
+		#region Constructors
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            _server.Dispose();
-        }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NtlmProxy"/> class.
+		/// </summary>
+		/// <param name="proxiedHostname">The proxied hostname.</param>
+		/// <param name="serverOptions">Configuration options for the server.</param>
+		public NtlmProxy(Uri proxiedHostname, SimpleHttpServerOptions serverOptions = null)
+		{
+			_options = serverOptions ?? SimpleHttpServerOptions.GetDefaultOptions();
+			_server = new SimpleHttpServer(ProcessRequest, serverOptions);
+			_hostname = proxiedHostname;
+		}
 
-        #endregion
+		#endregion
 
 
-        #region Private Methods
+		#region Public Methods
 
-        /// <summary>
-        /// Processes the request.
-        /// </summary>
-        /// <param name="context">The context.</param>
-        /// <returns>A task thread that resolves into an HTTP response.</returns>
-        private async Task<HttpResponseMessage> ProcessRequest(HttpListenerContext context)
-        {
-            var credential = CredentialCache.DefaultNetworkCredentials;
-            var myCache = new CredentialCache
-            {
-                {_hostname, "NTLM", credential}
-            };
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		public void Dispose()
+		{
+			Server.Dispose();
+		}
 
-            var handler = new HttpClientHandler
-            {
-                AllowAutoRedirect = true,
-                Credentials = myCache
-            };
+		#endregion
 
-            using (var client = new HttpClient(handler))
-            {
-                var httpMethod = new HttpMethod(context.Request.HttpMethod);
-                var target = new Uri(_hostname, context.Request.Url.PathAndQuery);
-                var content = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 
-                // New implementation suggested by https://github.com/blabla4
-                var request = new HttpRequestMessage(httpMethod, target);
-                if (content != String.Empty)
-                {
-                    var contentType = context.Request.ContentType;
+		#region Private Methods
 
-                    if (_options.HasAngularContentType && contentType != null)
-                    {
-                        // Thank you to https://github.com/svantreeck
-                        contentType = Regex.Replace(contentType, ";charset=(.)*", string.Empty);
-                    }
+		/// <summary>
+		/// Processes the request.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		/// <returns>A task thread that resolves into an HTTP response.</returns>
+		private async Task<ServerResponse> ProcessRequest(HttpListenerContext context)
+		{
+			var credential = _options.NetworkCredentials ?? CredentialCache.DefaultNetworkCredentials;
+			var myCache = new CredentialCache
+			{
+				{_hostname, "NTLM", credential}
+			};
 
-                    request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);
-                }
+			var handler = new HttpClientHandler
+			{
+				AllowAutoRedirect = false,
+				Credentials = myCache,
+				UseCookies = true,
+				CookieContainer = new CookieContainer()
+			};
 
-                // Add headers ('thank you' to https://github.com/svantreeck)
-                _options.RequestHeaders.ToList().ForEach(x => request.Headers.Add(x.Key, x.Value));
+			handler.CookieContainer.Add(_hostname, context.Request.Cookies);
 
-                if (_options.AreHeadersDuplicated)
-                {
-                    foreach (var key in context.Request.Headers.AllKeys)
-                    {
-                        if (!_options.ExcludedHeaders.Contains(key))
-                        {
-                            request.Headers.TryAddWithoutValidation(key, context.Request.Headers[key]);
-                        }
-                    }
-                }
+			using (var client = new HttpClient(handler))
+			{
+				var httpMethod = new HttpMethod(context.Request.HttpMethod);
+				var target = new Uri(_hostname, context.Request.Url.PathAndQuery);
+				var content = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 
-                return await client.SendAsync(request);
-            }
-        }
+				// New implementation suggested by https://github.com/blabla4
+				var request = new HttpRequestMessage(httpMethod, target);
+				if (content != String.Empty)
+				{
+					var contentType = context.Request.ContentType;
 
-        #endregion
-    }
+					if (_options.HasAngularContentType && contentType != null)
+					{
+						// Thank you to https://github.com/svantreeck
+						contentType = Regex.Replace(contentType, @";\s?charset=(.)*", string.Empty);
+					}
+
+					request.Content = new StringContent(content, context.Request.ContentEncoding, contentType);
+				}
+
+				// Add headers ('thank you' to https://github.com/svantreeck)
+				_options.RequestHeaders.ToList().ForEach(x => request.Headers.Add(x.Key, x.Value));
+
+				if (_options.AreHeadersDuplicated)
+				{
+					foreach (var key in context.Request.Headers.AllKeys)
+					{
+						if (!_options.ExcludedHeaders.Contains(key))
+						{
+							request.Headers.TryAddWithoutValidation(key, context.Request.Headers[key]);
+						}
+					}
+				}
+
+				HttpResponseMessage response = await client.SendAsync(request);
+
+				return new ServerResponse
+				{
+					Message = response,
+					Cookies = handler.CookieContainer.GetCookies(target)
+				};
+			}
+		}
+
+		#endregion
+	}
 }

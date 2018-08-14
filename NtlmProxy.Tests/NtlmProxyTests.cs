@@ -6,6 +6,7 @@ using System.Net.Http;
 using NUnit.Framework;
 using RestSharp;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy.Tests
 {
@@ -234,6 +235,37 @@ namespace MikeRogers.NtlmProxy.Tests
         }
 
         /// <summary>
+        /// Cookies passed in the request should be forwarded to the server.
+        /// </summary>
+        [Test]
+        public void ShouldPassCookiesWithProxiedRequest()
+        {
+            var proxyOptions = SimpleHttpServerOptions.GetDefaultOptions();
+
+            var serverAssertion = new Action<HttpListenerContext>(context =>
+            {
+                Assert.That(context.Request.Cookies["CookieOne"].Value, Is.EqualTo("Horse"));
+                Assert.That(context.Request.Cookies["CookieTwo"].Value, Is.EqualTo("Kangaroo"));
+            });
+
+            var clientAssertion = new Action<NtlmProxy>(proxy =>
+            {
+                var proxyUrl = string.Format("http://localhost:{0}/", proxy.Port);
+
+                var client = new RestClient(proxyUrl);
+
+                var request = new RestRequest("/", Method.GET);
+                request.AddCookie("CookieOne", "Horse");
+                request.AddCookie("CookieTwo", "Kangaroo");
+
+                client.Execute(request);
+            });
+
+            ExecuteTestInContext(SimpleHttpServerOptions.GetDefaultOptions(), proxyOptions, serverAssertion, clientAssertion);
+        }
+
+
+        /// <summary>
         /// This method creates a stub server (<code>server</code>).
         /// It will then create the proxy (<code>proxy</code>).
         /// Finally it issues a web request to the proxy.
@@ -242,16 +274,13 @@ namespace MikeRogers.NtlmProxy.Tests
         /// <param name="proxyOptions">The options for the running proxy server.</param>
         /// <param name="serverAssertion">The configuration/assertion code to run in the context of the server.</param>
         /// <param name="clientAssertion">The configuration/assertion code to run in the context of the client.</param>
-        private static void ExecuteTestInContext(
+        private void ExecuteTestInContext(
             SimpleHttpServerOptions serverOptions,
             SimpleHttpServerOptions proxyOptions,
             Action<HttpListenerContext> serverAssertion,
             Action<NtlmProxy> clientAssertion)
         {
-            // Unfortunately I'm not familiar enough with await/async to correct the following:
-            #pragma warning disable 1998
-            using (var server = new SimpleHttpServer(async context =>
-            #pragma warning restore 1998
+            using (var server = new SimpleHttpServer(context =>
             {
                 var response = new HttpResponseMessage
                 {
@@ -260,16 +289,23 @@ namespace MikeRogers.NtlmProxy.Tests
 
                 if (serverAssertion != null)
                 {
-                    serverAssertion(context);
+                    serverAssertion.Invoke(context);
                 }
 
-                return response;
+                return Task.FromResult(new ServerResponse {Message = response});
             }, serverOptions))
             {
                 var serverUri = new Uri(string.Format("http://localhost:{0}/", server.Port));
                 using (var proxy = new NtlmProxy(serverUri, proxyOptions))
                 {
                     clientAssertion(proxy);
+                }
+
+                if (server.ServerTask.Status == TaskStatus.Faulted &&
+                    server.ServerTask.Exception != null &&
+                    server.ServerTask.Exception.InnerException != null)
+                {
+                    throw server.ServerTask.Exception.InnerException;
                 }
             }
         }
