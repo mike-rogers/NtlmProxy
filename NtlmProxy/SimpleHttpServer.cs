@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy
@@ -25,6 +26,8 @@ namespace MikeRogers.NtlmProxy
         /// The function that handles incoming proxied requests
         /// </summary>
         private readonly Func<HttpListenerContext, Task<HttpResponseMessage>> _requestHandler;
+
+        private readonly CancellationTokenSource _listenerLoopCancellationTokenSource;
 
         #endregion
 
@@ -70,7 +73,10 @@ namespace MikeRogers.NtlmProxy
             _listener.Prefixes.Add(string.Format("http://localhost:{0}/", Port.ToString(CultureInfo.InvariantCulture)));
 
             _listener.Start();
-            StartListenLoop();
+
+            _listenerLoopCancellationTokenSource = new CancellationTokenSource();
+
+            StartListenLoop(_listenerLoopCancellationTokenSource.Token);
         }
 
         #endregion
@@ -83,7 +89,7 @@ namespace MikeRogers.NtlmProxy
         /// </summary>
         public void Dispose()
         {
-            _listener.Stop();
+            _listenerLoopCancellationTokenSource.Cancel();
         }
 
         #endregion
@@ -108,13 +114,19 @@ namespace MikeRogers.NtlmProxy
         /// <summary>
         /// Starts the listen loop.
         /// </summary>
-        private async void StartListenLoop()
+        private async void StartListenLoop(CancellationToken cancellationToken)
         {
             while (true)
             {
-                var context = await _listener.GetContextAsync();
-                var response = await _requestHandler(context);
+                if (cancellationToken.IsCancellationRequested)
+                    _listener.Close();
 
+                cancellationToken.ThrowIfCancellationRequested();
+
+
+                var context = await Task.Run(() => _listener.GetContext(), cancellationToken);
+                var response = await _requestHandler(context);
+ 
                 using (var stream = context.Response.OutputStream)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
@@ -131,6 +143,7 @@ namespace MikeRogers.NtlmProxy
                     stream.Write(bytes, 0, bytes.Count());
                     stream.Close();
                 }
+                
             }
         }
 
