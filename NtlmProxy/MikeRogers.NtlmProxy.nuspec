@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>MikeRogers.NtlmProxy</id>
-    <version>1.2.1.0</version>
+    <version>1.2.2.0</version>
     <title>NtlmProxy Library</title>
     <authors>Mike Rogers</authors>
     <owners>Mike Rogers</owners>
@@ -12,6 +12,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Provides a proxy that adds NTLM data for the current user, for use on systems requiring NTLM</description>
     <releaseNotes>
+	  1.2.2 - Fixed Bug in Disposal of HttpListener, made ListenerLoop Cancellable
       1.2.1 - Addressed bug (issue #3), allowing dynamic configuration of proxy port
               number
       1.2 --- Added support for proxying options, including

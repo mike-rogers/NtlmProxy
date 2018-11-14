@@ -6,6 +6,7 @@ using System.Net.Http;
 using NUnit.Framework;
 using RestSharp;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MikeRogers.NtlmProxy.Tests
 {
@@ -248,22 +249,22 @@ namespace MikeRogers.NtlmProxy.Tests
             Action<HttpListenerContext> serverAssertion,
             Action<NtlmProxy> clientAssertion)
         {
-            // Unfortunately I'm not familiar enough with await/async to correct the following:
-            #pragma warning disable 1998
-            using (var server = new SimpleHttpServer(async context =>
-            #pragma warning restore 1998
+            using (var server = new SimpleHttpServer(context =>
             {
-                var response = new HttpResponseMessage
+                return new Task<HttpResponseMessage>(() =>
                 {
-                    Content = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(ExpectedResultText)))
-                };
+                    var response = new HttpResponseMessage
+                    {
+                        Content = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(ExpectedResultText)))
+                    };
 
-                if (serverAssertion != null)
-                {
-                    serverAssertion(context);
-                }
+                    if (serverAssertion != null)
+                    {
+                        serverAssertion(context);
+                    }
 
-                return response;
+                    return response;
+                });
             }, serverOptions))
             {
                 var serverUri = new Uri(string.Format("http://localhost:{0}/", server.Port));
